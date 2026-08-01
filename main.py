@@ -5,34 +5,26 @@ import os
 
 app = FastAPI()
 
-openai.api_key = "YOUR_API_KEY"
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 class Input(BaseModel):
     text: str
+
+@app.get("/")
+def root():
+    return {"status": "running"}
 
 @app.post("/analyze")
 async def analyze(input: Input):
 
     prompt = f"""
-You are a qualitative research AI.
-
-Apply Braun & Clarke thematic analysis:
-
-1. Familiarization
-2. Coding
-3. Theme generation
-4. Theme review
-5. Theme naming
-6. Reporting
-
-Context:
-Phenomenological study of social workers & clients in Uganda.
+Perform thematic analysis (Braun & Clarke).
 
 Text:
 {input.text}
 
-Return JSON:
-codes, categories, themes, quotes
+Return JSON with:
+codes, themes, quotes
 """
 
     response = openai.ChatCompletion.create(
@@ -40,13 +32,4 @@ codes, categories, themes, quotes
         messages=[{"role":"user","content":prompt}]
     )
 
-    result = response["choices"][0]["message"]["content"]
-
-    return {
-        "analysis": result,
-        "graph": [
-            {"data": {"id":"theme1","label":"Theme"}},
-            {"data": {"id":"code1","label":"Code"}},
-            {"data": {"source":"code1","target":"theme1"}}
-        ]
-    }
+    return {"result": response["choices"][0]["message"]["content"]}
